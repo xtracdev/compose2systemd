@@ -2,10 +2,9 @@ package main
 
 import (
 	"flag"
-	"github.com/docker/libcompose/docker/ctx"
 	"github.com/docker/libcompose/project"
-	"github.com/docker/libcompose/docker"
 	"log"
+	"github.com/docker/libcompose/config"
 )
 
 var (
@@ -17,20 +16,20 @@ func init() {
 }
 
 func main() {
+
 	flag.Parse()
 
-	project, err := docker.NewProject(&ctx.Context{
-		Context: project.Context{
-			ComposeFiles: []string{composeFile},
-			ProjectName:  "my-compose",
-		},
-	}, nil)
+	dockerCompose := project.NewProject(&project.Context{
+		ProjectName:  "kube",
+		ComposeFiles: []string{composeFile},
+	}, nil, &config.ParseOptions{})
 
-	if err != nil {
-		log.Fatal(err)
+
+	if err := dockerCompose.Parse(); err != nil {
+		log.Fatalf("Failed to parse the compose project from %s: %v", composeFile, err)
 	}
 
-	if err := project.Parse(); err != nil {
-		log.Fatalf("Failed to parse the compose project from %s: %v", composeFile, err)
+	for _, name := range dockerCompose.ServiceConfigs.Keys() {
+		log.Printf("%s",name)
 	}
 }
